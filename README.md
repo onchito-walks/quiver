@@ -6,65 +6,67 @@ lesson ever learned. They draw the whole quiver on every turn whether they're
 aiming at anything or not. Most of those arrows never fly. They just sit
 there, heavy on the string, burning attention on tools no target demands.
 
-A hunter's quiver does not work this way. Every arrow has the same shaft —
-light, straight, essential. But the head changes. A broadhead for the hunt.
-A field point for everyday work. The shaft is always there because without
-it there is no arrow. The head is chosen for the target. And at night, the
-fletcher inspects every shaft, sharpens dull broadheads, replaces bent field
-points, and catalogs what's ready for the morning.
+A hunter's quiver does not work this way. The quiver itself — the leather,
+the stitching, the strap — is always on the hip. Light enough to forget it's
+there. Inside: broadheads for the hunt, field points for everyday work. The
+hunter reaches in and draws only the head the target demands. At night, the
+fletcher empties the quiver, sharpens dull broadheads, replaces bent field
+points, and checks that the leather hasn't stretched.
 
-Quiver is that quiver. It ensures each session carries exactly the arrows it
-needs and nothing more — shafts kept lean, heads matched to targets, everything
-sharpened nightly while the archer sleeps.
+Quiver is that quiver. AGENTS.md and SOUL.md form the bag — always carried,
+kept lean. Broadheads and field points fill it — drawn on demand. The fletcher
+works nightly while the archer sleeps.
 
 ---
 
 ## Architecture
 
 ```
-                        THE QUIVER
-                          │
-          ┌───────────────┼───────────────┐
-          │               │               │
-          ▼               ▼               ▼
-    THE SHAFT        THE HEAD       THE FLETCHER
-    (every arrow)    (chosen per     (nightly, 02:00)
-     always there)    target)
-          │               │               │
-    ┌──────────┐   ┌──────────────┐  ┌──────────────┐
-    │AGENTS.md │   │ BROADHEADS   │  │ Sharpens      │
-    │(3.1 KB)  │   │ (heavy tools)│  │ dull heads    │
-    │          │   │              │  │              │
-    │SOUL.md   │   │ browser      │  │ Replaces      │
-    │(3.5 KB)  │   │ image_gen    │  │ bent shafts   │
-    │          │   │ video_gen    │  │              │
-    │Budget:   │   │ code_exec    │  │ Trims shafts  │
-    │<16 KB    │   │ session_srch │  │ to budget     │
-    │combined  │   │ tts, vision  │  │              │
-    │          │   │ x_search     │  │ Catalogs      │
-    │          │   │ video        │  │ new heads     │
-    │          │   │              │  │              │
-    │          │   │ FIELD POINTS │  │ Patches       │
-    │          │   │ (skills)     │  │ catalog       │
-    │          │   │              │  │              │
-    │          │   │ research-    │  │ Updates       │
-    │          │   │ methodology  │  │ README        │
-    │          │   │ search-      │  │              │
-    │          │   │ routing      │  └──────────────┘
-    │          │   │ github-      │
-    │          │   │ autonomy     │
-    │          │   │ harness-     │
-    │          │   │ compensation │
-    │          │   │ lazy-tools   │
-    │          │   │ credential-  │
-    │          │   │ isolation    │
-    └──────────┘   └──────────────┘
+                      THE QUIVER (always on the hip)
+               ┌─────────────────────────────────────────┐
+               │  AGENTS.md (3.1 KB) + SOUL.md (3.5 KB) │
+               │  Budget: <16 KB combined                │
+               │                                         │
+               │  ┌──────────────────────────────────┐   │
+               │  │        BROADHEADS                │   │
+               │  │  (heavy tools, subagent dispatch)│   │
+               │  │                                  │   │
+               │  │  browser (10)    image_gen       │   │
+               │  │  session_search  video_gen       │   │
+               │  │  code_execution  tts             │   │
+               │  │  vision          x_search        │   │
+               │  │  video                           │   │
+               │  └──────────────────────────────────┘   │
+               │                                         │
+               │  ┌──────────────────────────────────┐   │
+               │  │        FIELD POINTS              │   │
+               │  │  (skills, loaded on demand)      │   │
+               │  │                                  │   │
+               │  │  research-methodology            │   │
+               │  │  search-routing                  │   │
+               │  │  github-autonomy                 │   │
+               │  │  harness-compensation            │   │
+               │  │  lazy-tools                      │   │
+               │  │  credential-isolation            │   │
+               │  │  leviathan-routing-architecture  │   │
+               │  └──────────────────────────────────┘   │
+               └─────────────────────────────────────────┘
+                                  │
+                                  ▼
+               ┌─────────────────────────────────────────┐
+               │           THE FLETCHER                  │
+               │           (nightly, 02:00 UTC)          │
+               │                                         │
+               │  Sharpens broadheads. Replaces field    │
+               │  points. Trims the leather. Catalogs    │
+               │  new heads. Patches the catalog.        │
+               └─────────────────────────────────────────┘
 ```
 
-### The Shaft — Every Arrow, Always
+### The Quiver — AGENTS.md + SOUL.md
 
-AGENTS.md and SOUL.md form the body of every arrow. Without them there is nothing
-to loose. They must be light enough that the hunter never notices the weight.
+The leather and stitching. Always on the hip. Must be light enough to forget it's
+there. Strict size budgets enforced by the fletcher every night.
 
 | File | Before | After | What moved |
 |---|---|---|---|
@@ -72,10 +74,10 @@ to loose. They must be light enough that the hunter never notices the weight.
 | SOUL.md | 10.1 KB | 3.5 KB | Removed overlaps, tightened prose |
 | Combined | 29.1 KB | 6.6 KB | -77% |
 
-### The Head — Chosen for the Target
+### Broadheads — Heavy Tools
 
-**Broadheads** are heavy tools. Disabled globally, cataloged in GBrain, dispatched
-as isolated subagents. A broadhead is never attached unless there's big game.
+Inside the quiver. Disabled globally, cataloged in GBrain (`systems/tool-catalog`),
+dispatched as isolated subagents. A broadhead is never drawn unless there's big game.
 
 | Broadhead | Tools | Drawn when |
 |---|---|---|
@@ -89,8 +91,10 @@ as isolated subagents. A broadhead is never attached unless there's big game.
 | vision | 1 | "analyze this image" |
 | video | 1 | "what's in this clip" |
 
-**Field points** are skills. Always in the quiver, drawn on demand when the task
-calls for them. Never burn tokens in sessions that don't need them.
+### Field Points — Skills
+
+Inside the quiver. Loaded on demand when the task calls for them. Never burn tokens
+in sessions that don't need them.
 
 | Field point | Drawn when |
 |---|---|
@@ -104,9 +108,9 @@ calls for them. Never burn tokens in sessions that don't need them.
 
 ### The Fletcher — Nightly, 02:00 UTC
 
-- **Sharpens broadheads**: Promotes frequently-used tools back to active duty.
+- **Sharpens broadheads**: Promotes frequently-used tools back to active.
 - **Replaces field points**: Flags stale skills, overlapping triggers, dead crons.
-- **Trims shafts**: Flags AGENTS.md/SOUL.md if they exceed the 8 KB budget.
+- **Trims the leather**: Flags AGENTS.md/SOUL.md if they exceed the 8 KB budget.
 - **Catalogs new heads**: Finds undiscovered tools and adds them to GBrain.
 - **Updates the ledger**: Patches the lazy-tools skill, updates this README.
 
