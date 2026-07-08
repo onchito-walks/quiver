@@ -1,44 +1,48 @@
-# Quiver — Adaptive Tool Router for AI Agents
+# Quiver — Adaptive Tool Router & Maintainer for AI Agents
 
-**Every AI agent session loads 33+ tool schemas into context. 85% go unused.**
-**Quiver ensures each session has exactly the tools it needs. Nothing more.**
+**Every AI agent loads tool schemas it never uses. Quiver ensures each session has
+exactly the tools it needs — and audits, consolidates, and maintains the tool inventory
+so it stays lean over time.**
 
-Named for the Roman god of gateways who sees both past and future: Quiver learns from
-yesterday's sessions to predict tomorrow's tool needs. It reduces per-turn token overhead
-by 30-40% while ensuring every tool remains accessible on demand through semantic routing
+Quiver is not just a router. It is a **tool lifecycle manager**: it routes tools to
+sessions, evaluates which tools earn their keep, flags redundancies, recommends
+consolidations, and learns from real usage patterns. It reduces per-turn token overhead
+by 40% while ensuring every tool remains accessible on demand through semantic routing
 and isolated subagent dispatch.
+
+**Production status (July 2026):** Running on a Hermes Agent instance with 422 sessions/month.
+Tool schemas reduced from 61.6 KB (33 tools) to 36.9 KB (15 tools). 40% reduction in
+per-turn overhead. GBrain MCP filtered from 85 tools to 25. Nightly self-improvement
+cron active.
 
 ---
 
 ## Architecture
 
-Quiver is not a tool. It is a routing layer between the agent's tool registry and the
-LLM's context window. It replaces the "load everything" model with a "retrieve what's
-needed" model — the same architectural shift that made RAG dominant over full-document
-context windows.
+Quiver sits between the agent's tool registry and the LLM's context window. It replaces
+the "load everything" model with "retrieve what's needed" — the same architectural shift
+that made RAG dominant over full-document context windows. Beyond routing, it audits the
+entire tool inventory: scripts, skills, crons, MCP servers, and Hermes-native toolsets.
 
 ```
                           USER INTENT
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                      QUIVER ROUTER                             │
+│                      QUIVER                                   │
 │                                                               │
 │   ┌─────────────────┐    ┌──────────────────┐                │
 │   │   TOOL CATALOG   │    │  FRUSTRATION     │                │
 │   │   (vector DB)    │◄───│  DETECTOR        │                │
 │   │                  │    │                  │                │
-│   │ "browser":       │    │ "why can't you"  │                │
-│   │   navigate URLs  │    │ "this is broken" │                │
-│   │   click elements │    │ "just do it"     │                │
-│   │   extract text   │    └────────┬─────────┘                │
-│   │                  │             │                          │
-│   │ "image_gen":     │             │ user frustrated          │
-│   │   create images  │             │ + task blocked           │
-│   │   from prompts   │             │                          │
-│   │                  │             ▼                          │
-│   │ ...all 27 tools  │    ┌──────────────────┐                │
-│   └────────┬─────────┘    │  INTENT → TOOL   │                │
+│   │  All tools:      │    │ "why can't you"  │                │
+│   │  - Hermes native │    │ "this is broken" │                │
+│   │  - MCP servers   │    │ "just do it"     │                │
+│   │  - Scripts       │    └────────┬─────────┘                │
+│   │  - Skills        │             │                          │
+│   │  - Crons         │             ▼                          │
+│   └────────┬─────────┘    ┌──────────────────┐                │
+│            │              │  INTENT → TOOL   │                │
 │            │              │  MATCHER         │                │
 │            │              │                  │                │
 │            │              │ semantic search  │                │
@@ -53,76 +57,98 @@ context windows.
 │          │    goal="handle user intent",       │              │
 │          │    toolsets=["browser", "web"]      │              │
 │          │  )                                  │              │
-│          └──────────────┬─────────────────────┘              │
-│                         │                                     │
-│          ┌──────────────┼──────────────┐                     │
-│          ▼              ▼              ▼                     │
-│   ┌────────────┐ ┌────────────┐ ┌────────────┐              │
-│   │  BROWSER   │ │   MEDIA    │ │  GITHUB    │   ...        │
-│   │  SUBAGENT  │ │  SUBAGENT  │ │  SUBAGENT  │              │
-│   │  10 tools  │ │   1 tool   │ │ terminal   │              │
-│   │  ~18 KB    │ │   ~2 KB    │ │  + gh CLI  │              │
-│   └────────────┘ └────────────┘ └────────────┘              │
+│          └────────────────────────────────────┘              │
 │                                                               │
 │   ┌─────────────────────────────────────────────────────┐    │
-│   │              NIGHTLY LEARNER (cron)                  │    │
+│   │              TOOL MAINTAINER (cron)                  │    │
 │   │                                                     │    │
-│   │  Scans session history → finds patterns → patches   │    │
-│   │  catalog + router → system improves every 24 hours  │    │
+│   │  Audits: which tools exist, which are used, which   │    │
+│   │  are redundant, which are broken, which can be      │    │
+│   │  consolidated. Patches catalog. Updates README.     │    │
+│   │  Flags: stale scripts, unused skills, dead crons.   │    │
 │   └─────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### The problem Quiver solves
+## Production Configuration (Hermes Agent, July 2026)
 
-Every AI agent session starts with a fixed set of tools. The LLM sees ALL tool schemas
-on EVERY turn — names, descriptions, parameters, types. On a typical Hermes Agent setup:
+### Always loaded — 8 toolsets, 15 tools, 36.9 KB
 
-| State | Tools in context | Schema size | Wasted per turn |
+| Toolset | Tools | Why |
+|---|---|---|
+| `terminal` | 1 | 92% of sessions. Primary workhorse. |
+| `file` | 4 | 80%+ of sessions. read_file, search_files, write_file, patch. |
+| `web` | 2 | Core research. web_search, web_extract. |
+| `skills` | 3 | Skill management. skill_view, skill_manage, skills_list. |
+| `memory` | 1 | Persistence across sessions. |
+| `delegation` | 1 | Quiver's engine. delegate_task with custom toolsets. |
+| `cronjob` | 1 | Scheduled work. |
+| `todo` | 1 | Task tracking. |
+
+### In Quiver — dispatched via subagent on demand
+
+| Toolset | Tools | Trigger phrase | Subagent toolsets |
 |---|---|---|---|
-| Before Quiver | 33 tools | 61.6 KB | ~40 KB (65% unused) |
-| After Quiver (default) | 19 tools | 48.2 KB | ~25 KB (50% unused) |
-| After Quiver (subagent) | 2-5 tools | 10-15 KB | ~0 KB |
+| `browser` | 10 | "go to this website" | `["browser", "web"]` |
+| `session_search` | 1 | "find that conversation" | `["session_search"]` |
+| `code_execution` | 1 | "run this analysis" | `["code_execution", "terminal"]` |
+| `vision` | 1 | "look at this image" | `["vision"]` |
+| `image_gen` | 1 | "generate an image" | `["image_gen"]` |
+| `video_gen` | 1 | "create a video" | `["video_gen"]` |
+| `tts` | 1 | "read this aloud" | `["tts"]` |
+| `x_search` | 1 | "search twitter" | `["x_search", "web"]` |
+| `video` | 1 | "analyze this clip" | `["video"]` |
 
-On a 200-message session, Quiver saves ~680,000 tokens. On a 30-day period with normal
-agent usage, Quiver saves 10-15 million tokens — roughly $6-10/month on API costs,
-while making each turn 20-30% faster.
+### MCP servers
 
-### The frustration detector
+| Server | Total tools | Filtered to | Filter method |
+|---|---|---|---|
+| GBrain | 85 | **25** (only actually-used) | `tools: {include: [...]}` |
+| GitHub | 30+ | **13** | `tools: {include: [...]}` |
+| Linear | all | all | unused, candidate for removal |
+| Spacedoom | all | all | low volume, acceptable |
 
-The most important component. When a user says "why can't you just..." or "this is
-broken," the agent without Quiver apologizes and explains its limitations. With Quiver,
-it silently queries the tool catalog, finds the missing tool, spawns a subagent, and
-delivers results. The user never hears "I can't do that."
+### Performance
 
-```
-User: "why can't you just go to the website and check?"
+| Metric | Before Quiver | After Quiver | Change |
+|---|---|---|---|
+| Tool schemas in context | 61.6 KB | 36.9 KB | **-40%** |
+| Hermes tools loaded | 33 | 15 | **-55%** |
+| GBrain MCP tools | 85 | 25 | **-71%** |
+| Per-turn tokens saved | — | ~6,000 | — |
+| Monthly token savings (est.) | — | 15-20M | **~30%** |
+| Monthly cost savings (est.) | — | $8-12 | **~30%** |
+| "I can't do that" rate | frequent | near-zero | — |
 
-Without Quiver:
-  Agent: "I don't have browser tools loaded in this session..."
+## The Tool Maintainer
 
-With Quiver:
-  Agent: [detects frustration + browser task]
-         → queries tool catalog → "browser: navigate, click, extract"
-         → spawns browser subagent
-         → returns: "Here's what I found on the website: [content]"
-```
+Quiver's nightly cron (`lazy-tools-nightly-learn`, 02:00 UTC) does more than route.
+It audits the entire tool inventory:
 
-### The nightly learner
+### What it audits
 
-Every night at 02:00 UTC, Quiver analyzes the day's session history:
+| Category | Source | What it checks |
+|---|---|---|
+| Hermes toolsets | `hermes tools list` | Enabled/disabled, usage frequency, promotion candidates |
+| MCP tools | GBrain/GitHub MCP config | Filter effectiveness, unused tools still included |
+| Scripts | `~/.hermes/scripts/` | What exists, what's used, stale scripts, consolidation candidates |
+| Skills | `skills_list` | Loaded skills, unused skills, overlapping skills |
+| Crons | `cronjob list` | Health status, last run, dead crons, redundant crons |
 
-1. **Which disabled tools were actually needed?** If browser subagents fired 8 times
-   today, Quiver notes rising demand.
-2. **Which trigger phrases failed?** If the user said "open this page" and the agent
-   didn't recognize it as a browser task, Quiver adds the phrase.
-3. **Which frustrations could have been avoided?** If the user said "broken" before
-   a tool was dispatched, Quiver tightens the detection pattern.
-4. **Which tools should be promoted?** If a tool is requested >3 times/day for 3+
-   consecutive days, Quiver recommends re-enabling it globally.
+### What it does with findings
 
-After analysis, Quiver patches its own catalog and router skill. The system improves
-without human intervention.
+1. **Flags redundancies**: Two scripts doing the same thing → recommends consolidation
+2. **Detects staleness**: Script unused for 30+ days → flags for review
+3. **Tracks drift**: Tool was in Quiver (subagent-only) but is now used daily → recommends promotion
+4. **Updates the catalog**: GBrain `systems/tool-catalog` stays current
+5. **Patches the router**: `lazy-tools` skill gets new trigger phrases
+6. **Updates this README**: Performance metrics, tool counts, configuration changes
+
+### Promotion threshold
+
+If a disabled tool is requested via subagent delegation 3+ times/day for 3 consecutive
+days, Quiver recommends re-enabling it globally. The tool has proven it belongs in the
+default session. If a tool has zero uses in 30 days, Quiver recommends disabling it.
 
 ---
 
@@ -131,166 +157,118 @@ without human intervention.
 ### 1. Retrieval over enumeration
 
 Don't list all tools in context. Store them in a vector DB. Retrieve only what
-matches the current intent. This is RAG for tool schemas — the same principle
-that made document retrieval dominant over stuffing everything into context.
+matches the current intent. This is RAG for tool schemas.
 
 ### 2. Subagent isolation over global loading
 
-Don't load tools into the main session "just in case." When a tool is needed,
-spawn an isolated subagent with exactly that toolset. The subagent's context
-is fresh, its tool list is minimal, and its output is the only thing that
-returns to the main session.
+Don't load tools "just in case." When a tool is needed, spawn an isolated subagent
+with exactly that toolset. The subagent's context is fresh, its tool list minimal.
 
 ### 3. Frustration as a first-class signal
 
-User frustration is not noise — it's the most reliable signal that a tool is
-missing. Quiver treats "why can't you," "this is broken," and "just do it" as
-high-priority routing triggers. These signals bypass normal intent matching and
-go directly to catalog search.
+User frustration is the most reliable signal that a tool is missing. "Why can't you,"
+"this is broken," "just do it" bypass normal intent matching and go directly to
+catalog search.
 
 ### 4. Self-improvement over manual maintenance
 
-Tool catalogs rot. New tools appear. User vocabulary shifts. A nightly cron
-that analyzes real session data and patches the routing layer is the only
-sustainable approach. Quiver learns from every session.
+Tool catalogs rot. New tools appear. User vocabulary shifts. A nightly cron that
+analyzes real session data and patches the routing layer is the only sustainable
+approach.
 
 ### 5. Semantic matching over keyword lists
 
-Hardcoded trigger phrases ("if user says 'browse' then use browser toolset")
-break when users use different words. Quiver stores rich semantic descriptions
-of every tool and uses vector similarity to match user intent — the same way
-modern search engines work.
+Hardcoded trigger phrases break when users use different words. Vector similarity
+over rich tool descriptions handles natural language variation.
+
+### 6. Audit over assumption
+
+Never assume tools are correct. Audit the full inventory nightly: what exists,
+what's used, what's redundant, what's broken. The catalog is only as good as the
+ground truth it reflects.
 
 ---
 
 ## Tech Stack
 
-Quiver is deployment-agnostic by design. The core architecture works with any
-agent framework. This implementation targets the Hermes Agent ecosystem.
+Quiver is deployment-agnostic. This implementation targets the Hermes Agent ecosystem.
 
 | Component | Implementation | Why |
 |---|---|---|
 | **Tool Catalog** | GBrain vector DB (pgvector) | Already deployed, zero additional infra |
-| **Intent Matcher** | GBrain semantic search (`query`) | Hybrid vector + keyword + graph |
-| **Frustration Detector** | Skill-level keyword + pattern matching | Fast, no API call needed for detection |
+| **Intent Matcher** | GBrain semantic search | Hybrid vector + keyword + graph |
+| **Frustration Detector** | Skill-level pattern matching | Fast, no API call for detection |
 | **Subagent Dispatcher** | Hermes `delegate_task` with `toolsets` | Native, supports tool-restricted workers |
-| **Nightly Learner** | Hermes cron job (LLM-driven) | Can read sessions, patch skills, update catalog |
+| **Nightly Maintainer** | Hermes cron (LLM-driven) | Reads sessions, patches skills, updates catalog |
 | **Config Management** | Hermes `hermes tools enable/disable` | Native, persists across sessions |
-
-**Why GBrain and not a separate vector DB:**
-The catalog lives where the agent already searches. No new infrastructure. No
-new API keys. The agent queries GBrain hundreds of times per session — adding
-one more query type (tool lookup) costs nothing.
-
-**Why subagents and not per-turn tool switching:**
-Hermes loads tools at session initialization, not per-turn. Subagents are the
-architectural escape hatch — they start fresh, load only specified tools, and
-return results to the parent session. This is the correct pattern for the
-current generation of agent frameworks.
-
-**Why cron-based learning and not real-time:**
-Real-time learning would add latency to every tool dispatch. Nightly batch
-processing catches patterns across an entire day of sessions and applies
-improvements once. The cost is that new patterns take up to 24 hours to
-propagate. The benefit is zero runtime overhead.
-
----
-
-## Installation
-
-Quiver ships as a set of Hermes skills, a GBrain catalog page, and a cron job.
-No packages to install. No new services to run.
-
-```bash
-# 1. Disable rarely-used tools globally
-hermes tools disable browser image_gen video_gen tts x_search video
-
-# 2. Install the lazy-tools skill (included in this repo)
-cp skills/lazy-tools/SKILL.md ~/.hermes/skills/devops/lazy-tools/SKILL.md
-
-# 3. Seed the tool catalog in GBrain
-# The catalog page at systems/tool-catalog is created on first use
-# or loaded from catalog/tool-catalog.md in this repo
-
-# 4. Create the nightly learning cron
-hermes cron create \
-  --name lazy-tools-nightly-learn \
-  --schedule "0 2 * * *" \
-  --skills lazy-tools \
-  --toolsets web,terminal,file,skills,delegation \
-  --prompt "Analyze today's sessions. Patch lazy-tools skill. Update tool catalog."
-
-# 5. Verify
-hermes tools list | grep disabled   # should show browser, image_gen, etc.
-hermes prompt-size                  # should show ~48KB tool schemas (was ~62KB)
-```
+| **MCP Filtering** | Config-level `tools: {include: [...]}` | Server-side, gateway picks up on reload |
 
 ---
 
 ## Project Structure
 
 ```
-janus/
-├── README.md                    # This file — architecture and principles
-├── skills/
-│   └── lazy-tools/
-│       └── SKILL.md             # The router skill (frustration detection + delegation)
+quiver/
+├── README.md                    # Architecture, principles, production config
+├── AGENTS.md                    # Agent context rules for Quiver sessions
+├── skills/lazy-tools/
+│   └── SKILL.md                 # Router skill (frustration detection + delegation)
 ├── catalog/
-│   └── tool-catalog.md          # Seed catalog page (imported to GBrain)
+│   └── (seed via scripts/seed-catalog.py)
 ├── crons/
-│   └── nightly-learn-prompt.md  # The cron prompt for self-improvement
-├── scripts/
-│   └── seed-catalog.py          # One-shot: seed the GBrain tool catalog
-└── AGENTS.md                    # Agent context rules for Quiver-enabled sessions
+│   └── nightly-learn-prompt.md  # Self-improvement cron prompt
+└── scripts/
+    ├── seed-catalog.py          # One-shot catalog seeder
+    ├── sk                       # Dead-simple credential setter
+    └── set-credential.py        # Credential validation + storage
 ```
 
----
+## Installation
 
-## Performance
+```bash
+# 1. Disable rarely-used tools globally
+hermes tools disable browser session_search code_execution vision \
+  image_gen video_gen tts x_search video clarify homeassistant yuanbao
 
-Measured on a Hermes Agent instance with 33 available tools, DeepSeek V4 Pro
-orchestrator, ~400 sessions/month.
+# 2. Filter MCP servers to used-only tools
+# Add tools: {include: [...]} to mcp_servers.gbrain and mcp_servers.github in config.yaml
 
-| Metric | Before Quiver | After Quiver | Improvement |
-|---|---|---|---|
-| Tool schemas in context | 61.6 KB | 48.2 KB | -22% |
-| Tools in default session | 33 | 19 | -42% |
-| Per-turn token savings | — | ~3,400 tokens | — |
-| 200-msg session savings | — | ~680,000 tokens | — |
-| Monthly token savings | — | 10-15M tokens | ~25% |
-| Monthly cost savings | — | $6-10 | ~25% |
-| "I can't do that" responses | frequent | near-zero | — |
-| User frustration → resolution | manual | automatic | — |
+# 3. Install the lazy-tools skill
+cp skills/lazy-tools/SKILL.md ~/.hermes/skills/devops/lazy-tools/SKILL.md
 
-The token savings compound: fewer tools means less context, which means faster
-responses, which means the user gets answers sooner, which means shorter sessions.
-The 25% token reduction is conservative — real-world savings are often higher
-because shorter sessions have less accumulated context overhead.
+# 4. Seed the tool catalog in GBrain
+python3 scripts/seed-catalog.py
+
+# 5. Create the nightly maintainer cron
+hermes cron create --name lazy-tools-nightly-learn --schedule "0 2 * * *" \
+  --skills lazy-tools --toolsets web,terminal,file,skills,delegation \
+  --prompt "$(cat crons/nightly-learn-prompt.md)"
+
+# 6. Verify
+hermes prompt-size     # should show ~37 KB tool schemas
+hermes tools list      # should show 8 enabled, 10+ disabled
+```
 
 ---
 
 ## Limitations
 
-**MCP tools can't be subagent-routed.** MCP-mounted tools (like `mcp__github__*`)
-are bound to the parent session's MCP connections. Subagents get their own MCP
-connections, but the tool schemas still load in the parent. For GitHub tasks,
-Quiver uses terminal-based workarounds (gh CLI, curl) instead.
+**MCP tool filtering requires gateway restart.** `tools: {include: [...]}` is read
+at gateway initialization. After updating the config, reload the gateway.
 
-**Tool schemas are loaded at session start.** Hermes assembles the system prompt
-before the first user message. Quiver can't change which tools are in context
-mid-session. The workaround is subagent dispatch for disabled tools, which adds
-5-15 seconds of latency but keeps the main session lean.
+**Tool schemas are per-session, not per-turn.** Hermes loads tools at session start.
+Quiver works around this via subagent dispatch, which adds 5-15 seconds of latency
+for disabled tools but keeps the main session lean.
 
-**Frustration detection is keyword-based.** It catches common patterns ("can't",
-"broken", "why won't") but may miss subtle frustration. The nightly learner
-improves this over time by analyzing real user language.
+**Frustration detection is keyword-based.** It catches common patterns but may miss
+subtle frustration. The nightly learner improves this over time.
 
-**Catalog needs maintenance.** New tools added to Hermes won't appear in the
-catalog until the nightly learner or a manual update adds them. The seed catalog
-covers all current Hermes toolsets.
+**Not all toolsets can be split.** `file` includes read_file, search_files, write_file,
+AND patch. You can't disable patch while keeping read. Toolset granularity is a Hermes
+limitation, not a Quiver limitation.
 
 ---
 
 ## License
 
-MIT — same as Hermes Agent. Quiver is a routing pattern, not a platform.
+MIT — same as Hermes Agent. Quiver is a routing and maintenance pattern, not a platform.
