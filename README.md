@@ -1,83 +1,96 @@
-# Quiver — Adaptive Tool Router & Maintainer for AI Agents
+# Quiver — Adaptive Context Optimizer for AI Agents
 
 AI agents are born into the world carrying every tool they might ever need.
 Thirty-three schemas, sixty kilobytes, loaded into every conversation turn
-whether they're used or not. Most of those tools never fire. They just sit
-there, burning tokens, slowing responses, bloating context windows that
-are already fighting for space. The agent spends 40% of its attention
-budget on tools it will never call.
+whether they're used or not. Their instruction files grow without bound —
+every lesson learned, every pitfall encountered, every pattern discovered
+piled into SOUL.md and AGENTS.md until the agent spends more tokens reading
+its own rules than doing actual work.
 
-Quiver fixes this. It is a tool router and maintainer that ensures each
-session carries exactly the tools it needs and nothing more. When a tool
-isn't loaded, it isn't gone — it's cataloged in a vector database, matched
-to user intent through semantic search, and dispatched through isolated
-subagents the moment it's needed. The user never hears "I can't do that."
-They just get results.
+Quiver fixes this. It is a context optimizer that ensures each session carries
+exactly what it needs and nothing more. It operates on three fronts:
 
-But Quiver doesn't stop at routing. It audits the entire tool inventory
-every night: which scripts are stale, which skills overlap, which crons
-have gone silent, which tools have earned their place in the default
-loadout and which should be demoted. It patches its own catalog, updates
-its own documentation, and gets smarter every 24 hours without human
-intervention.
+**Tools.** Unused tools are disabled globally and cataloged in a vector database.
+When you need one, Quiver matches your intent through semantic search and dispatches
+an isolated subagent with exactly the right toolset. The user never hears "I can't
+do that." They just get results.
 
-Quiver exists because tools should serve the session, not the other way
-around. It lives to make agents faster, cheaper, and harder to frustrate.
+**Instruction files.** SOUL.md and AGENTS.md are kept under strict size budgets.
+Situational content — research methodology, search routing, delegation patterns,
+GitHub workflows — is moved to skills that load on demand instead of burning tokens
+in every session. A relocation map in GBrain tracks where everything went so
+nothing is ever lost.
+
+**Nightly maintenance.** Every night at 02:00 UTC, Quiver audits the entire system:
+tools (which are stale, which should be promoted), instruction files (are they
+within budget), scripts (any redundancies), skills (any overlap), and crons (any
+dead jobs). It patches its own catalog, updates its own documentation, and flags
+issues for review. The system gets smarter every 24 hours without human intervention.
+
+Quiver exists because context is the most expensive resource an AI agent has.
+It lives to make agents faster, cheaper, and harder to frustrate — not by taking
+capabilities away, but by keeping them on shelves until the moment they're needed.
 
 ---
 
 ## Architecture
 
-Quiver sits between the agent's tool registry and the LLM's context window. It replaces
-the "load everything" model with "retrieve what's needed" — the same architectural shift
-that made RAG dominant over full-document context windows. Beyond routing, it audits the
-entire tool inventory: scripts, skills, crons, MCP servers, and Hermes-native toolsets.
+Quiver operates on three layers of context waste. Each layer has its own optimization
+strategy, its own storage, and its own nightly audit.
 
 ```
-                          USER INTENT
+                          USER SESSION
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                      QUIVER                                   │
 │                                                               │
-│   ┌─────────────────┐    ┌──────────────────┐                │
-│   │   TOOL CATALOG   │    │  FRUSTRATION     │                │
-│   │   (vector DB)    │◄───│  DETECTOR        │                │
-│   │                  │    │                  │                │
-│   │  All tools:      │    │ "why can't you"  │                │
-│   │  - Hermes native │    │ "this is broken" │                │
-│   │  - MCP servers   │    │ "just do it"     │                │
-│   │  - Scripts       │    └────────┬─────────┘                │
-│   │  - Skills        │             │                          │
-│   │  - Crons         │             ▼                          │
-│   └────────┬─────────┘    ┌──────────────────┐                │
-│            │              │  INTENT → TOOL   │                │
-│            │              │  MATCHER         │                │
-│            │              │                  │                │
-│            │              │ semantic search  │                │
-│            │              │ over catalog     │                │
-│            └──────┬───────┴────────┬─────────┘                │
-│                   │                │                          │
-│                   ▼                ▼                          │
-│          ┌────────────────────────────────────┐              │
-│          │       SUBAGENT DISPATCHER           │              │
-│          │                                     │              │
-│          │  delegate_task(                     │              │
-│          │    goal="handle user intent",       │              │
-│          │    toolsets=["browser", "web"]      │              │
-│          │  )                                  │              │
-│          └────────────────────────────────────┘              │
+│  LAYER 1: TOOLS                    LAYER 2: INSTRUCTIONS      │
+│  ┌─────────────────────┐          ┌─────────────────────┐    │
+│  │ Hermes toolsets     │          │ SOUL.md (3.5 KB)    │    │
+│  │ 8 enabled (36.9 KB) │          │ AGENTS.md (3.1 KB)  │    │
+│  │ 10 in catalog       │          │ Budget: <16 KB      │    │
+│  │                     │          │                      │    │
+│  │ GBrain MCP: 25/85   │          │ Skills on demand:    │    │
+│  │ GitHub MCP: 13/30+  │          │ research-methodology │    │
+│  └─────────┬───────────┘          │ search-routing       │    │
+│            │                      │ github-autonomy      │    │
+│            ▼                      │ harness-compensation │    │
+│  ┌─────────────────────┐          └─────────┬───────────┘    │
+│  │ Frustration Detector│                    │                │
+│  │ Intent → Tool Match │                    ▼                │
+│  │ Subagent Dispatch   │          ┌─────────────────────┐    │
+│  └─────────────────────┘          │ Context Budget       │    │
+│                                   │ Enforcement          │    │
+│                                   │ Relocation Map (GB)  │    │
+│                                   └─────────────────────┘    │
 │                                                               │
-│   ┌─────────────────────────────────────────────────────┐    │
-│   │              TOOL MAINTAINER (cron)                  │    │
-│   │                                                     │    │
-│   │  Audits: which tools exist, which are used, which   │    │
-│   │  are redundant, which are broken, which can be      │    │
-│   │  consolidated. Patches catalog. Updates README.     │    │
-│   │  Flags: stale scripts, unused skills, dead crons.   │    │
-│   └─────────────────────────────────────────────────────┘    │
+│  LAYER 3: NIGHTLY MAINTAINER (cron, 02:00 UTC)               │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ Audits: tools, instruction files, scripts, skills,  │    │
+│  │ crons. Patches catalog. Updates README. Flags       │    │
+│  │ staleness, redundancy, budget violations.           │    │
+│  └─────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+### System Flow — What Runs When
+
+| Trigger | What Happens | Where Results Go |
+|---|---|---|
+| **Session start** | AGENTS.md + SOUL.md loaded (6.6 KB combined) | LLM context window |
+| **User needs disabled tool** | Frustration detector → catalog search → subagent dispatch | Subagent returns results to session |
+| **User triggers a skill** | Skill loaded from `~/.hermes/skills/` on demand | LLM context (only when needed) |
+| **02:00 UTC nightly** | Quiver maintainer cron fires | GBrain audit page + skill patches + README update |
+| **Config change** | systemd path unit → git autocommit | GitHub (onchito-walks/quiver) |
+
+### Source of Truth Hierarchy
+
+| Priority | Location | What Lives There |
+|---|---|---|
+| **1. Runtime** | `~/.hermes/SOUL.md`, `AGENTS.md`, `config.yaml` | What actually loads into sessions |
+| **2. Durable** | GBrain (`systems/quiver-context-map`) | Relocation map, audit history, catalog |
+| **3. Canonical** | GitHub (`onchito-walks/quiver`) | Versioned docs, architecture, standards |
 
 ## Production Configuration (Hermes Agent, July 2026)
 
@@ -121,12 +134,19 @@ entire tool inventory: scripts, skills, crons, MCP servers, and Hermes-native to
 
 | Metric | Before Quiver | After Quiver | Change |
 |---|---|---|---|
-| Tool schemas in context | 61.6 KB | 36.9 KB | **-40%** |
+| **Tools** | | | |
+| Hermes tool schemas | 61.6 KB | 36.9 KB | **-40%** |
 | Hermes tools loaded | 33 | 15 | **-55%** |
 | GBrain MCP tools | 85 | 25 | **-71%** |
-| Per-turn tokens saved | — | ~6,000 | — |
-| Monthly token savings (est.) | — | 15-20M | **~30%** |
-| Monthly cost savings (est.) | — | $8-12 | **~30%** |
+| **Instructions** | | | |
+| AGENTS.md | 19.0 KB | 3.1 KB | **-84%** |
+| SOUL.md | 10.1 KB | 3.5 KB | **-65%** |
+| Combined instruction files | 29.1 KB | 6.6 KB | **-77%** |
+| System prompt total | 33.3 KB | 21.6 KB | **-35%** |
+| **Impact** | | | |
+| Per-turn tokens saved | — | ~12,000 | — |
+| Monthly token savings (est.) | — | 120M | **~30%** |
+| Monthly cost savings (est.) | — | $65 | **~30%** |
 | "I can't do that" rate | frequent | near-zero | — |
 
 ## The Tool Maintainer
