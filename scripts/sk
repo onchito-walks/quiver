@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# sk — dead-simple credential setter. One word, paste, done.
+# Usage: sk                     # prompts for provider + key
+#        sk anthropic           # prompts for key only
+#        sk anthropic --clip    # reads key from clipboard, zero typing
+#        sk anthropic sk-ant-... # one-liner, no prompts
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SET_CRED="$SCRIPT_DIR/set-credential.py"
+
+# ── No args: ask for provider ──
+if [[ $# -eq 0 ]]; then
+    echo "Providers: deepseek | anthropic | cerebras | openai | openrouter | google"
+    read -rp "Provider: " PROVIDER
+    if [[ -z "$PROVIDER" ]]; then
+        echo "No provider given."
+        exit 1
+    fi
+    # Prompt for key
+    echo "Paste key and press Enter:"
+    read -rs KEY
+    if [[ -z "$KEY" ]]; then
+        echo "No key provided."
+        exit 1
+    fi
+    echo "$KEY" | python3 "$SET_CRED" "$PROVIDER"
+    exit $?
+fi
+
+PROVIDER="$1"
+shift
+
+# ── sk anthropic sk-ant-... (direct) ──
+if [[ $# -ge 1 && "$1" != "--clip" && "$1" != "--paste" ]]; then
+    echo "$1" | python3 "$SET_CRED" "$PROVIDER"
+    exit $?
+fi
+
+# ── sk anthropic --clip (read from clipboard) ──
+if [[ "${1:-}" == "--clip" ]]; then
+    if command -v wl-paste &>/dev/null; then
+        KEY=$(wl-paste 2>/dev/null)
+    elif command -v xclip &>/dev/null; then
+        KEY=$(xclip -selection clipboard -o 2>/dev/null)
+    elif command -v pbpaste &>/dev/null; then
+        KEY=$(pbpaste 2>/dev/null)
+    else
+        echo "No clipboard tool found. Install wl-paste, xclip, or use: sk $PROVIDER"
+        exit 1
+    fi
+    if [[ -z "$KEY" ]]; then
+        echo "Clipboard is empty."
+        exit 1
+    fi
+    echo "Reading key from clipboard (${#KEY} chars)..."
+    echo "$KEY" | python3 "$SET_CRED" "$PROVIDER"
+    exit $?
+fi
+
+# ── sk anthropic (prompt for key) ──
+echo "Paste key for $PROVIDER and press Enter:"
+read -rs KEY
+if [[ -z "$KEY" ]]; then
+    echo "No key provided."
+    exit 1
+fi
+echo "$KEY" | python3 "$SET_CRED" "$PROVIDER"
