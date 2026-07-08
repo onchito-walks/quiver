@@ -11,101 +11,132 @@ the grip. Every pitfall becomes another notch. SOUL.md and AGENTS.md accumulate
 until the agent spends more energy reading its own inscriptions than aiming
 at the target.
 
-A quiver does not carry every arrow at once. It holds them in reserve — field
-points for practice, broadheads for the hunt, judo points for small game —
-and the archer draws only the head that matches the target. At night, the
-fletcher inspects every shaft, sharpens what's dull, replaces what's broken,
-and catalogs what's ready.
+A hunter does not carry every arrow nocked at once. The bow stays light —
+just the grip and the string. Broadheads wait in the quiver for specific game.
+Field points wait for everyday work. At night, the fletcher inspects every shaft,
+sharpens dull broadheads, replaces bent field points, and catalogs what's ready
+for the morning hunt.
 
 Quiver is that quiver. It ensures each session carries exactly the arrows it
 needs and nothing more. It lives to make agents faster, cheaper, and harder
-to frustrate — not by taking arrows away, but by keeping them in the quiver
-until the moment the target demands them.
+to frustrate — not by taking arrows away, but by keeping them sheathed until
+the target demands them.
 
 ---
 
 ## Architecture
 
-Quiver has three jobs. Each maps to a piece of the archer's kit.
-
 ```
-                          THE ARCHER (your session)
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                        THE QUIVER                             │
-│                                                               │
-│  BROADHEADS                        FIELD POINTS              │
-│  (heavy tools, drawn on demand)    (instructions, always in  │
-│  ┌─────────────────────┐          hand but kept light)       │
-│  │ browser (10 tools)  │          ┌─────────────────────┐    │
-│  │ session_search      │          │ AGENTS.md (3.1 KB)  │    │
-│  │ code_execution      │          │ SOUL.md (3.5 KB)    │    │
-│  │ image_gen           │          │ Budget: <16 KB      │    │
-│  │ video_gen, tts,     │          │                      │    │
-│  │ x_search, vision    │          │ Skills on demand:    │    │
-│  │                     │          │ research-methodology │    │
-│  │ Cataloged in GBrain │          │ search-routing       │    │
-│  │ Dispatched via      │          │ github-autonomy      │    │
-│  │ subagent delegation │          │ harness-compensation │    │
-│  └─────────────────────┘          └─────────────────────┘    │
-│                                                               │
-│  THE FLETCHER (nightly, 02:00 UTC)                            │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ Inspects every arrow. Sharpens dull broadheads      │    │
-│  │ (promotes frequently-used tools). Trims field       │    │
-│  │ points (enforces instruction budgets). Catalogs     │    │
-│  │ new arrowheads (flags undiscovered tools). Replaces │    │
-│  │ broken shafts (dead crons, stale scripts). Patches  │    │
-│  │ the catalog. Updates the README.                    │    │
-│  └─────────────────────────────────────────────────────┘    │
-└──────────────────────────────────────────────────────────────┘
+                          THE BOW (always in hand)
+                    ┌─────────────────────────────┐
+                    │  AGENTS.md (3.1 KB)         │
+                    │  SOUL.md   (3.5 KB)         │
+                    │  Budget: <16 KB combined    │
+                    └─────────────┬───────────────┘
+                                  │
+                    THE ARCHER (your session)
+                                  │
+                                  ▼
+               ┌──────────────────────────────────────┐
+               │            THE QUIVER                 │
+               │                                      │
+               │  BROADHEADS        FIELD POINTS      │
+               │  (tools)           (skills)          │
+               │  ┌──────────┐     ┌──────────────┐  │
+               │  │ browser  │     │ research-    │  │
+               │  │ img_gen  │     │ methodology  │  │
+               │  │ vid_gen  │     │ search-      │  │
+               │  │ tts      │     │ routing      │  │
+               │  │ x_search │     │ github-      │  │
+               │  │ vision   │     │ autonomy     │  │
+               │  │ video    │     │ harness-     │  │
+               │  │ ses_srch │     │ compensation │  │
+               │  │ code_exec│     │ lazy-tools   │  │
+               │  │          │     │ credential-  │  │
+               │  │          │     │ isolation    │  │
+               │  └──────────┘     └──────────────┘  │
+               │                                      │
+               │  Cataloged in GBrain.                │
+               │  Drawn via subagent dispatch.        │
+               │  Frustration = auto-draw.            │
+               └──────────────────────────────────────┘
+                                  │
+                                  ▼
+               ┌──────────────────────────────────────┐
+               │        THE FLETCHER                  │
+               │        (nightly, 02:00 UTC)          │
+               │                                      │
+               │  Sharpens broadheads (promotes       │
+               │  frequently-used tools to active).   │
+               │  Replaces field points (flags        │
+               │  stale skills, overlap, dead crons). │
+               │  Trims the bow (enforces SOUL.md     │
+               │  and AGENTS.md size budgets).        │
+               │  Catalogs new heads. Patches the     │
+               │  catalog. Updates the README.        │
+               └──────────────────────────────────────┘
 ```
 
-### Broadheads — Heavy Tools, Drawn on Demand
+### The Bow — AGENTS.md + SOUL.md
 
-Tools disabled globally, cataloged in GBrain, dispatched as isolated subagents when
-the target demands them. The archer never carries a broadhead nocked unless there's
-game in sight.
-
-| Broadhead | Tools | Drawn when archer says |
-|---|---|---|
-| browser | 10 | "go to this website", "take a screenshot" |
-| session_search | 1 | "find that conversation", "what did we discuss" |
-| code_execution | 1 | "run this analysis", "process this data" |
-| image_gen | 1 | "generate an image", "create a picture" |
-| video_gen | 1 | "make a video", "animate this" |
-| tts | 1 | "read this aloud", "speak this" |
-| x_search | 1 | "search twitter", "what's trending" |
-| vision | 1 | "look at this image", "analyze this picture" |
-| video | 1 | "analyze this video", "what's in this clip" |
-
-### Field Points — Instructions, Always in Hand but Kept Light
-
-SOUL.md and AGENTS.md are the bow. They're always in hand but must stay light enough
-to draw quickly. Content that's only needed situationally is moved to skills (separate
-arrowheads loaded on demand). A relocation map in GBrain (`systems/quiver-context-map`)
-tracks where every rule went — nothing is lost, only stored smarter.
+Always in hand. Must be light enough to draw without thinking. Strict size budgets
+enforced by the fletcher every night.
 
 | File | Before | After | What moved |
 |---|---|---|---|
-| AGENTS.md | 19.0 KB | 3.1 KB | Research, search routing, delegation patterns → skills |
+| AGENTS.md | 19.0 KB | 3.1 KB | Research, search routing, delegation, GitHub → field points |
 | SOUL.md | 10.1 KB | 3.5 KB | Removed overlaps, tightened prose |
 | Combined | 29.1 KB | 6.6 KB | -77% |
 
+### Broadheads — Tools for Specific Game
+
+Heavy tools. Disabled globally, cataloged in GBrain (`systems/tool-catalog`), dispatched
+as isolated subagents when the target demands them. A broadhead is never nocked unless
+there's game in sight.
+
+| Broadhead | Tools | Drawn when |
+|---|---|---|
+| browser | 10 | "go to this website", "take a screenshot" |
+| session_search | 1 | "find that conversation" |
+| code_execution | 1 | "run this analysis" |
+| image_gen | 1 | "generate an image" |
+| video_gen | 1 | "make a video" |
+| tts | 1 | "read this aloud" |
+| x_search | 1 | "search twitter" |
+| vision | 1 | "analyze this image" |
+| video | 1 | "what's in this clip" |
+
+### Field Points — Skills for Everyday Work
+
+General-purpose arrows. Always in the quiver, drawn on demand when the task calls for
+them. Each field point loads its full content only when triggered — never burns tokens
+in sessions that don't need it.
+
+| Field point | Drawn when |
+|---|---|
+| research-methodology | Any research task ("look up", "study", "investigate") |
+| search-routing | Any search ("find", "search for") |
+| github-autonomy | GitHub operations ("push", "repo", "create issue") |
+| harness-compensation | Subagent delegation, verification, context reset |
+| lazy-tools (Quiver) | Frustration detection, tool dispatch |
+| credential-isolation | Credential operations ("update the key") |
+| leviathan-routing-architecture | Model/provider/routing changes |
+
 ### The Fletcher — Nightly Maintenance
 
-Every night at 02:00 UTC, the fletcher inspects the quiver:
+Every night at 02:00 UTC, the fletcher works through the quiver:
 
-- **Sharpens broadheads**: Promotes tools that are requested >3x/day back to active
-- **Trims field points**: Flags AGENTS.md/SOUL.md if they exceed the 8 KB budget
-- **Catalogs new arrowheads**: Finds undiscovered tools and adds them to GBrain
-- **Replaces broken shafts**: Flags dead crons, stale scripts, overlapping skills
-- **Updates the ledger**: Patches the lazy-tools skill, updates the README
+- **Sharpens broadheads**: Promotes tools requested >3x/day back to active duty.
+- **Replaces field points**: Flags stale skills, overlapping triggers, dead crons.
+- **Trims the bow**: Flags AGENTS.md/SOUL.md if they exceed the 8 KB budget.
+- **Catalogs new heads**: Finds undiscovered tools and adds them to GBrain.
+- **Updates the ledger**: Patches the lazy-tools skill, updates this README.
+
+---
 
 ## Production Configuration (Hermes Agent, July 2026)
 
-### Always loaded — 8 toolsets, 15 tools, 36.9 KB
+### The Bow — 8 toolsets, 15 tools, 36.9 KB
 
 | Toolset | Tools | Why |
 |---|---|---|
@@ -118,23 +149,35 @@ Every night at 02:00 UTC, the fletcher inspects the quiver:
 | `cronjob` | 1 | Scheduled work. |
 | `todo` | 1 | Task tracking. |
 
-### In Quiver — dispatched via subagent on demand
+### Broadheads — Dispatched via subagent
 
-| Toolset | Tools | Trigger phrase | Subagent toolsets |
-|---|---|---|---|
-| `browser` | 10 | "go to this website" | `["browser", "web"]` |
-| `session_search` | 1 | "find that conversation" | `["session_search"]` |
-| `code_execution` | 1 | "run this analysis" | `["code_execution", "terminal"]` |
-| `vision` | 1 | "look at this image" | `["vision"]` |
-| `image_gen` | 1 | "generate an image" | `["image_gen"]` |
-| `video_gen` | 1 | "create a video" | `["video_gen"]` |
-| `tts` | 1 | "read this aloud" | `["tts"]` |
-| `x_search` | 1 | "search twitter" | `["x_search", "web"]` |
-| `video` | 1 | "analyze this clip" | `["video"]` |
+| Broadhead | Tools | Subagent toolsets |
+|---|---|---|
+| `browser` | 10 | `["browser", "web"]` |
+| `session_search` | 1 | `["session_search"]` |
+| `code_execution` | 1 | `["code_execution", "terminal"]` |
+| `vision` | 1 | `["vision"]` |
+| `image_gen` | 1 | `["image_gen"]` |
+| `video_gen` | 1 | `["video_gen"]` |
+| `tts` | 1 | `["tts"]` |
+| `x_search` | 1 | `["x_search", "web"]` |
+| `video` | 1 | `["video"]` |
 
-### MCP servers
+### Field Points — Skills loaded on demand
 
-| Server | Total tools | Filtered to | Filter method |
+| Field point | Trigger |
+|---|---|
+| `research-methodology` | research, look up, study, investigate |
+| `search-routing` | search, find, look up |
+| `github-autonomy` | push, github, repo, create issue |
+| `harness-compensation` | delegation, verification, subagent work |
+| `lazy-tools` | frustration detection, tool dispatch |
+| `credential-isolation` | credential, API key, token |
+| `leviathan-routing-architecture` | model, provider, routing |
+
+### MCP Servers
+
+| Server | Total tools | In Quiver | Filter method |
 |---|---|---|---|
 | GBrain | 85 | **25** (only actually-used) | `tools: {include: [...]}` |
 | GitHub | 30+ | **13** | `tools: {include: [...]}` |
@@ -143,89 +186,60 @@ Every night at 02:00 UTC, the fletcher inspects the quiver:
 
 ### Performance
 
-| Metric | Before Quiver | After Quiver | Change |
+| Layer | Before | After | Change |
 |---|---|---|---|
-| **Tools** | | | |
-| Hermes tool schemas | 61.6 KB | 36.9 KB | **-40%** |
-| Hermes tools loaded | 33 | 15 | **-55%** |
-| GBrain MCP tools | 85 | 25 | **-71%** |
-| **Instructions** | | | |
+| **The Bow** | | | |
 | AGENTS.md | 19.0 KB | 3.1 KB | **-84%** |
 | SOUL.md | 10.1 KB | 3.5 KB | **-65%** |
-| Combined instruction files | 29.1 KB | 6.6 KB | **-77%** |
-| System prompt total | 33.3 KB | 21.6 KB | **-35%** |
+| Combined | 29.1 KB | 6.6 KB | **-77%** |
+| **Broadheads** | | | |
+| Hermes tools loaded | 33 | 15 | **-55%** |
+| Tool schemas | 61.6 KB | 36.9 KB | **-40%** |
+| GBrain MCP tools | 85 | 25 | **-71%** |
 | **Impact** | | | |
+| System prompt | 33.3 KB | 21.6 KB | **-35%** |
 | Per-turn tokens saved | — | ~12,000 | — |
-| Monthly token savings (est.) | — | 120M | **~30%** |
-| Monthly cost savings (est.) | — | $65 | **~30%** |
+| Monthly savings | — | ~120M tokens / ~$65 | — |
 | "I can't do that" rate | frequent | near-zero | — |
-
-## The Tool Maintainer
-
-Quiver's nightly cron (`lazy-tools-nightly-learn`, 02:00 UTC) does more than route.
-It audits the entire tool inventory:
-
-### What it audits
-
-| Category | Source | What it checks |
-|---|---|---|
-| Hermes toolsets | `hermes tools list` | Enabled/disabled, usage frequency, promotion candidates |
-| MCP tools | GBrain/GitHub MCP config | Filter effectiveness, unused tools still included |
-| Scripts | `~/.hermes/scripts/` | What exists, what's used, stale scripts, consolidation candidates |
-| Skills | `skills_list` | Loaded skills, unused skills, overlapping skills |
-| Crons | `cronjob list` | Health status, last run, dead crons, redundant crons |
-
-### What it does with findings
-
-1. **Flags redundancies**: Two scripts doing the same thing → recommends consolidation
-2. **Detects staleness**: Script unused for 30+ days → flags for review
-3. **Tracks drift**: Tool was in Quiver (subagent-only) but is now used daily → recommends promotion
-4. **Updates the catalog**: GBrain `systems/tool-catalog` stays current
-5. **Patches the router**: `lazy-tools` skill gets new trigger phrases
-6. **Updates this README**: Performance metrics, tool counts, configuration changes
-
-### Promotion threshold
-
-If a disabled tool is requested via subagent delegation 3+ times/day for 3 consecutive
-days, Quiver recommends re-enabling it globally. The tool has proven it belongs in the
-default session. If a tool has zero uses in 30 days, Quiver recommends disabling it.
 
 ---
 
 ## Design Principles
 
-### 1. Retrieval over enumeration
+### 1. The bow stays light
 
-Don't list all tools in context. Store them in a vector DB. Retrieve only what
-matches the current intent. This is RAG for tool schemas.
+SOUL.md and AGENTS.md are always in hand. They must be small enough to draw without
+thinking. Content that's only needed sometimes lives in the quiver as field points.
 
-### 2. Subagent isolation over global loading
+### 2. Broadheads match the game
 
-Don't load tools "just in case." When a tool is needed, spawn an isolated subagent
-with exactly that toolset. The subagent's context is fresh, its tool list minimal.
+Don't nock a broadhead for a rabbit. Don't nock a field point for a bear. Match the
+arrow to the target. Heavy tools (browser, image gen) dispatch as subagents. Light
+tools (web search, file read) stay nocked.
 
-### 3. Frustration as a first-class signal
+### 3. Frustration is a first-class signal
 
-User frustration is the most reliable signal that a tool is missing. "Why can't you,"
-"this is broken," "just do it" bypass normal intent matching and go directly to
-catalog search.
+When the archer curses, the quiver opens. "Why can't you," "this is broken," "just
+do it" — these are not complaints. They are the sound of a broadhead not being drawn
+when it should have been. Quiver detects them and dispatches immediately.
 
-### 4. Self-improvement over manual maintenance
+### 4. The fletcher works while the archer sleeps
 
-Tool catalogs rot. New tools appear. User vocabulary shifts. A nightly cron that
-analyzes real session data and patches the routing layer is the only sustainable
-approach.
+Tool catalogs rot. Skills go stale. The bow accumulates weight. A nightly cron that
+analyzes real usage data and patches the system is the only sustainable approach.
+Quiver improves every 24 hours without the archer touching a thing.
 
 ### 5. Semantic matching over keyword lists
 
-Hardcoded trigger phrases break when users use different words. Vector similarity
-over rich tool descriptions handles natural language variation.
+Hardcoded trigger phrases break when the archer uses different words. Broadheads and
+field points are stored with rich descriptions in a vector database. The archer says
+what they need; Quiver finds the right arrow by meaning, not by keyword.
 
 ### 6. Audit over assumption
 
-Never assume tools are correct. Audit the full inventory nightly: what exists,
-what's used, what's redundant, what's broken. The catalog is only as good as the
-ground truth it reflects.
+Never assume the quiver is correctly stocked. The fletcher audits the full inventory
+every night: what exists, what's used, what's redundant, what's broken. The catalog
+is only as good as the ground truth it reflects.
 
 ---
 
@@ -239,7 +253,7 @@ Quiver is deployment-agnostic. This implementation targets the Hermes Agent ecos
 | **Intent Matcher** | GBrain semantic search | Hybrid vector + keyword + graph |
 | **Frustration Detector** | Skill-level pattern matching | Fast, no API call for detection |
 | **Subagent Dispatcher** | Hermes `delegate_task` with `toolsets` | Native, supports tool-restricted workers |
-| **Nightly Maintainer** | Hermes cron (LLM-driven) | Reads sessions, patches skills, updates catalog |
+| **The Fletcher** | Hermes cron (LLM-driven) | Reads sessions, patches skills, updates catalog |
 | **Config Management** | Hermes `hermes tools enable/disable` | Native, persists across sessions |
 | **MCP Filtering** | Config-level `tools: {include: [...]}` | Server-side, gateway picks up on reload |
 
@@ -256,7 +270,7 @@ quiver/
 ├── catalog/
 │   └── (seed via scripts/seed-catalog.py)
 ├── crons/
-│   └── nightly-learn-prompt.md  # Self-improvement cron prompt
+│   └── nightly-learn-prompt.md  # The Fletcher's instructions
 └── scripts/
     ├── seed-catalog.py          # One-shot catalog seeder
     ├── sk                       # Dead-simple credential setter
@@ -266,27 +280,27 @@ quiver/
 ## Installation
 
 ```bash
-# 1. Disable rarely-used tools globally
+# 1. Disable broadheads (heavy tools)
 hermes tools disable browser session_search code_execution vision \
   image_gen video_gen tts x_search video clarify homeassistant yuanbao
 
 # 2. Filter MCP servers to used-only tools
 # Add tools: {include: [...]} to mcp_servers.gbrain and mcp_servers.github in config.yaml
 
-# 3. Install the lazy-tools skill
+# 3. Install the lazy-tools skill (the Quiver router)
 cp skills/lazy-tools/SKILL.md ~/.hermes/skills/devops/lazy-tools/SKILL.md
 
 # 4. Seed the tool catalog in GBrain
 python3 scripts/seed-catalog.py
 
-# 5. Create the nightly maintainer cron
+# 5. Create the Fletcher cron
 hermes cron create --name lazy-tools-nightly-learn --schedule "0 2 * * *" \
   --skills lazy-tools --toolsets web,terminal,file,skills,delegation \
   --prompt "$(cat crons/nightly-learn-prompt.md)"
 
 # 6. Verify
-hermes prompt-size     # should show ~37 KB tool schemas
-hermes tools list      # should show 8 enabled, 10+ disabled
+hermes prompt-size     # bow should be ~37 KB tool schemas, ~22 KB system prompt
+hermes tools list      # 8 toolsets enabled, broadheads disabled
 ```
 
 ---
@@ -296,12 +310,11 @@ hermes tools list      # should show 8 enabled, 10+ disabled
 **MCP tool filtering requires gateway restart.** `tools: {include: [...]}` is read
 at gateway initialization. After updating the config, reload the gateway.
 
-**Tool schemas are per-session, not per-turn.** Hermes loads tools at session start.
-Quiver works around this via subagent dispatch, which adds 5-15 seconds of latency
-for disabled tools but keeps the main session lean.
+**Broadheads add latency.** Subagent dispatch takes 5-15 seconds. Worth it for heavy
+tools that would otherwise bloat every turn, but noticeably slower than a nocked arrow.
 
 **Frustration detection is keyword-based.** It catches common patterns but may miss
-subtle frustration. The nightly learner improves this over time.
+subtle frustration. The fletcher improves this nightly from real session data.
 
 **Not all toolsets can be split.** `file` includes read_file, search_files, write_file,
 AND patch. You can't disable patch while keeping read. Toolset granularity is a Hermes
