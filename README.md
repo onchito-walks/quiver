@@ -1,19 +1,28 @@
 # Quiver — Adaptive Tool Router & Maintainer for AI Agents
 
-**Every AI agent loads tool schemas it never uses. Quiver ensures each session has
-exactly the tools it needs — and audits, consolidates, and maintains the tool inventory
-so it stays lean over time.**
+AI agents are born into the world carrying every tool they might ever need.
+Thirty-three schemas, sixty kilobytes, loaded into every conversation turn
+whether they're used or not. Most of those tools never fire. They just sit
+there, burning tokens, slowing responses, bloating context windows that
+are already fighting for space. The agent spends 40% of its attention
+budget on tools it will never call.
 
-Quiver is not just a router. It is a **tool lifecycle manager**: it routes tools to
-sessions, evaluates which tools earn their keep, flags redundancies, recommends
-consolidations, and learns from real usage patterns. It reduces per-turn token overhead
-by 40% while ensuring every tool remains accessible on demand through semantic routing
-and isolated subagent dispatch.
+Quiver fixes this. It is a tool router and maintainer that ensures each
+session carries exactly the tools it needs and nothing more. When a tool
+isn't loaded, it isn't gone — it's cataloged in a vector database, matched
+to user intent through semantic search, and dispatched through isolated
+subagents the moment it's needed. The user never hears "I can't do that."
+They just get results.
 
-**Production status (July 2026):** Running on a Hermes Agent instance with 422 sessions/month.
-Tool schemas reduced from 61.6 KB (33 tools) to 36.9 KB (15 tools). 40% reduction in
-per-turn overhead. GBrain MCP filtered from 85 tools to 25. Nightly self-improvement
-cron active.
+But Quiver doesn't stop at routing. It audits the entire tool inventory
+every night: which scripts are stale, which skills overlap, which crons
+have gone silent, which tools have earned their place in the default
+loadout and which should be demoted. It patches its own catalog, updates
+its own documentation, and gets smarter every 24 hours without human
+intervention.
+
+Quiver exists because tools should serve the session, not the other way
+around. It lives to make agents faster, cheaper, and harder to frustrate.
 
 ---
 
