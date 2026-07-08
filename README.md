@@ -1,96 +1,107 @@
 # Quiver — Adaptive Context Optimizer for AI Agents
 
-AI agents are born into the world carrying every tool they might ever need.
-Thirty-three schemas, sixty kilobytes, loaded into every conversation turn
-whether they're used or not. Their instruction files grow without bound —
-every lesson learned, every pitfall encountered, every pattern discovered
-piled into SOUL.md and AGENTS.md until the agent spends more tokens reading
-its own rules than doing actual work.
+AI agents are born into the world carrying every arrow they might ever need.
+Thirty-three broadheads, sixty kilobytes of steel, nocked and drawn on every
+turn whether they're aimed at anything or not. Most of those arrows never fly.
+They just sit there, weighing down the bow, slowing the draw, burning attention
+on tools the agent will never loose.
 
-Quiver fixes this. It is a context optimizer that ensures each session carries
-exactly what it needs and nothing more. It operates on three fronts:
+Meanwhile the bow itself grows heavy. Every lesson learned gets carved into
+the grip. Every pitfall becomes another notch. SOUL.md and AGENTS.md accumulate
+until the agent spends more energy reading its own inscriptions than aiming
+at the target.
 
-**Tools.** Unused tools are disabled globally and cataloged in a vector database.
-When you need one, Quiver matches your intent through semantic search and dispatches
-an isolated subagent with exactly the right toolset. The user never hears "I can't
-do that." They just get results.
+A quiver does not carry every arrow at once. It holds them in reserve — field
+points for practice, broadheads for the hunt, judo points for small game —
+and the archer draws only the head that matches the target. At night, the
+fletcher inspects every shaft, sharpens what's dull, replaces what's broken,
+and catalogs what's ready.
 
-**Instruction files.** SOUL.md and AGENTS.md are kept under strict size budgets.
-Situational content — research methodology, search routing, delegation patterns,
-GitHub workflows — is moved to skills that load on demand instead of burning tokens
-in every session. A relocation map in GBrain tracks where everything went so
-nothing is ever lost.
-
-**Nightly maintenance.** Every night at 02:00 UTC, Quiver audits the entire system:
-tools (which are stale, which should be promoted), instruction files (are they
-within budget), scripts (any redundancies), skills (any overlap), and crons (any
-dead jobs). It patches its own catalog, updates its own documentation, and flags
-issues for review. The system gets smarter every 24 hours without human intervention.
-
-Quiver exists because context is the most expensive resource an AI agent has.
-It lives to make agents faster, cheaper, and harder to frustrate — not by taking
-capabilities away, but by keeping them on shelves until the moment they're needed.
+Quiver is that quiver. It ensures each session carries exactly the arrows it
+needs and nothing more. It lives to make agents faster, cheaper, and harder
+to frustrate — not by taking arrows away, but by keeping them in the quiver
+until the moment the target demands them.
 
 ---
 
 ## Architecture
 
-Quiver operates on three layers of context waste. Each layer has its own optimization
-strategy, its own storage, and its own nightly audit.
+Quiver has three jobs. Each maps to a piece of the archer's kit.
 
 ```
-                          USER SESSION
+                          THE ARCHER (your session)
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                      QUIVER                                   │
+│                        THE QUIVER                             │
 │                                                               │
-│  LAYER 1: TOOLS                    LAYER 2: INSTRUCTIONS      │
-│  ┌─────────────────────┐          ┌─────────────────────┐    │
-│  │ Hermes toolsets     │          │ SOUL.md (3.5 KB)    │    │
-│  │ 8 enabled (36.9 KB) │          │ AGENTS.md (3.1 KB)  │    │
-│  │ 10 in catalog       │          │ Budget: <16 KB      │    │
-│  │                     │          │                      │    │
-│  │ GBrain MCP: 25/85   │          │ Skills on demand:    │    │
-│  │ GitHub MCP: 13/30+  │          │ research-methodology │    │
-│  └─────────┬───────────┘          │ search-routing       │    │
-│            │                      │ github-autonomy      │    │
-│            ▼                      │ harness-compensation │    │
-│  ┌─────────────────────┐          └─────────┬───────────┘    │
-│  │ Frustration Detector│                    │                │
-│  │ Intent → Tool Match │                    ▼                │
-│  │ Subagent Dispatch   │          ┌─────────────────────┐    │
-│  └─────────────────────┘          │ Context Budget       │    │
-│                                   │ Enforcement          │    │
-│                                   │ Relocation Map (GB)  │    │
-│                                   └─────────────────────┘    │
+│  BROADHEADS                        FIELD POINTS              │
+│  (heavy tools, drawn on demand)    (instructions, always in  │
+│  ┌─────────────────────┐          hand but kept light)       │
+│  │ browser (10 tools)  │          ┌─────────────────────┐    │
+│  │ session_search      │          │ AGENTS.md (3.1 KB)  │    │
+│  │ code_execution      │          │ SOUL.md (3.5 KB)    │    │
+│  │ image_gen           │          │ Budget: <16 KB      │    │
+│  │ video_gen, tts,     │          │                      │    │
+│  │ x_search, vision    │          │ Skills on demand:    │    │
+│  │                     │          │ research-methodology │    │
+│  │ Cataloged in GBrain │          │ search-routing       │    │
+│  │ Dispatched via      │          │ github-autonomy      │    │
+│  │ subagent delegation │          │ harness-compensation │    │
+│  └─────────────────────┘          └─────────────────────┘    │
 │                                                               │
-│  LAYER 3: NIGHTLY MAINTAINER (cron, 02:00 UTC)               │
+│  THE FLETCHER (nightly, 02:00 UTC)                            │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │ Audits: tools, instruction files, scripts, skills,  │    │
-│  │ crons. Patches catalog. Updates README. Flags       │    │
-│  │ staleness, redundancy, budget violations.           │    │
+│  │ Inspects every arrow. Sharpens dull broadheads      │    │
+│  │ (promotes frequently-used tools). Trims field       │    │
+│  │ points (enforces instruction budgets). Catalogs     │    │
+│  │ new arrowheads (flags undiscovered tools). Replaces │    │
+│  │ broken shafts (dead crons, stale scripts). Patches  │    │
+│  │ the catalog. Updates the README.                    │    │
 │  └─────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### System Flow — What Runs When
+### Broadheads — Heavy Tools, Drawn on Demand
 
-| Trigger | What Happens | Where Results Go |
+Tools disabled globally, cataloged in GBrain, dispatched as isolated subagents when
+the target demands them. The archer never carries a broadhead nocked unless there's
+game in sight.
+
+| Broadhead | Tools | Drawn when archer says |
 |---|---|---|
-| **Session start** | AGENTS.md + SOUL.md loaded (6.6 KB combined) | LLM context window |
-| **User needs disabled tool** | Frustration detector → catalog search → subagent dispatch | Subagent returns results to session |
-| **User triggers a skill** | Skill loaded from `~/.hermes/skills/` on demand | LLM context (only when needed) |
-| **02:00 UTC nightly** | Quiver maintainer cron fires | GBrain audit page + skill patches + README update |
-| **Config change** | systemd path unit → git autocommit | GitHub (onchito-walks/quiver) |
+| browser | 10 | "go to this website", "take a screenshot" |
+| session_search | 1 | "find that conversation", "what did we discuss" |
+| code_execution | 1 | "run this analysis", "process this data" |
+| image_gen | 1 | "generate an image", "create a picture" |
+| video_gen | 1 | "make a video", "animate this" |
+| tts | 1 | "read this aloud", "speak this" |
+| x_search | 1 | "search twitter", "what's trending" |
+| vision | 1 | "look at this image", "analyze this picture" |
+| video | 1 | "analyze this video", "what's in this clip" |
 
-### Source of Truth Hierarchy
+### Field Points — Instructions, Always in Hand but Kept Light
 
-| Priority | Location | What Lives There |
-|---|---|---|
-| **1. Runtime** | `~/.hermes/SOUL.md`, `AGENTS.md`, `config.yaml` | What actually loads into sessions |
-| **2. Durable** | GBrain (`systems/quiver-context-map`) | Relocation map, audit history, catalog |
-| **3. Canonical** | GitHub (`onchito-walks/quiver`) | Versioned docs, architecture, standards |
+SOUL.md and AGENTS.md are the bow. They're always in hand but must stay light enough
+to draw quickly. Content that's only needed situationally is moved to skills (separate
+arrowheads loaded on demand). A relocation map in GBrain (`systems/quiver-context-map`)
+tracks where every rule went — nothing is lost, only stored smarter.
+
+| File | Before | After | What moved |
+|---|---|---|---|
+| AGENTS.md | 19.0 KB | 3.1 KB | Research, search routing, delegation patterns → skills |
+| SOUL.md | 10.1 KB | 3.5 KB | Removed overlaps, tightened prose |
+| Combined | 29.1 KB | 6.6 KB | -77% |
+
+### The Fletcher — Nightly Maintenance
+
+Every night at 02:00 UTC, the fletcher inspects the quiver:
+
+- **Sharpens broadheads**: Promotes tools that are requested >3x/day back to active
+- **Trims field points**: Flags AGENTS.md/SOUL.md if they exceed the 8 KB budget
+- **Catalogs new arrowheads**: Finds undiscovered tools and adds them to GBrain
+- **Replaces broken shafts**: Flags dead crons, stale scripts, overlapping skills
+- **Updates the ledger**: Patches the lazy-tools skill, updates the README
 
 ## Production Configuration (Hermes Agent, July 2026)
 
