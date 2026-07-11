@@ -5,15 +5,16 @@ description = "Hermes adaptive context optimizer and lazy tool router"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
-authors = [{name = "Raymond Delgado / Onchito"}]
-dependencies = []
+authors = [{name = "Ramon Delgado", email = "ray@raymonddelgado.com"}]
 
 [project.scripts]
 quiver = "quiver.cli:main"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends._legacy:_Backend"
 
-[tool.hatch.build.targets.wheel]
-packages = ["quiver"]
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-v -p no:warnings"
+testpaths = ["tests"]
