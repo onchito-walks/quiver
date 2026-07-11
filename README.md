@@ -166,20 +166,22 @@ in sessions that don't need them.
 
 ### Performance
 
-| Part | Before | After | Change |
-|---|---|---|---|
-| **Shaft** | | | |
-| AGENTS.md | 19.0 KB | 3.1 KB | **-84%** |
-| SOUL.md | 10.1 KB | 3.5 KB | **-65%** |
-| **Heads** | | | |
-| Hermes tools loaded | 33 | 15 | **-55%** |
-| Tool schemas | 61.6 KB | 36.9 KB | **-40%** |
-| GBrain MCP tools | 85 | 25 | **-71%** |
-| **Impact** | | | |
-| System prompt | 33.3 KB | 21.6 KB | **-35%** |
-| Per-turn tokens saved | — | ~12,000 | — |
-| Monthly savings | — | ~120M tokens / ~$65 | — |
-| "I can't do that" rate | frequent | near-zero | — |
+| Part | Before (Jun 2026) | After (Jun 2026) | Current (Jul 09 2026) | Change |
+|---|---|---|---|---|
+| **Shaft** | | | | |
+| AGENTS.md | 19.0 KB | 3.1 KB | 3.5 KB | **-82%** |
+| SOUL.md | 10.1 KB | 3.5 KB | 3.5 KB | **-65%** |
+| Combined | 29.1 KB | 6.6 KB | 7.0 KB | **-76%** |
+| **Heads** | | | | |
+| Hermes tools loaded | 33 | 15 | 15 | **-55%** |
+| Tool schemas | 61.6 KB | 36.9 KB | 36.9 KB | **-40%** |
+| GBrain MCP tools | 85 | 25 | 25 | **-71%** |
+| GitHub MCP tools | 30+ | 13 | 13 | **-57%** |
+| **Impact** | | | | |
+| System prompt | 33.3 KB | 21.6 KB | 21.4 KB | **-36%** |
+| Per-turn tokens saved | — | ~12,000 | ~12,000 | — |
+| Monthly savings | — | ~120M tokens / ~$65 | ~130M tokens / ~$70 | — |
+| "I can't do that" rate | frequent | near-zero | near-zero | — |
 
 ---
 
@@ -217,35 +219,68 @@ meaning, not by memorized trigger phrases.
 
 ## Installation
 
+Quiver now has a tiny stdlib CLI so Hermes can prove the integration instead of relying on a remembered checklist.
+
+```bash
+# Put the quiver command on PATH for this machine
+sudo bash scripts/install-quiver-wrapper.sh
+
+# Verify the integration
+quiver doctor
+quiver status --json
+
+# Dry-run the install plan
+quiver install
+
+# Apply/repair drift in the active Hermes profile
+quiver install --apply
+quiver repair --apply
+```
+
+The CLI manages the same native Hermes/GBrain pieces Quiver has always used:
+
 ```bash
 # 1. Sheathe the broadheads
 hermes tools disable browser session_search code_execution vision \
   image_gen video_gen tts x_search video clarify homeassistant yuanbao
 
-# 2. Filter MCP servers
+# 2. Keep light heads nocked
+hermes tools enable web terminal file skills todo memory delegation cronjob
+
+# 3. Filter MCP servers
 # Add tools: {include: [...]} to mcp_servers.gbrain and mcp_servers.github
+# Then restart/reload the gateway because MCP tool lists load at startup.
 
-# 3. Install the router
-cp skills/lazy-tools/SKILL.md ~/.hermes/skills/devops/lazy-tools/SKILL.md
+# 4. Install the router skill
+cp skills/lazy-tools/SKILL.md "$HERMES_HOME/skills/devops/lazy-tools/SKILL.md"
 
-# 4. Seed the catalog
-python3 scripts/seed-catalog.py
+# 5. Seed the catalog
+python3 scripts/seed-catalog.py  # prints catalog metadata; quiver install --apply writes it via gbrain
 
-# 5. Wake the fletcher
+# 6. Wake the fletcher
 hermes cron create --name lazy-tools-nightly-learn --schedule "0 2 * * *" \
   --skills lazy-tools --toolsets web,terminal,file,skills,delegation \
   --prompt "$(cat crons/nightly-learn-prompt.md)"
 
-# 6. Verify
+# 7. Verify
 hermes prompt-size     # shaft + light heads = ~37 KB schemas, ~22 KB prompt
-hermes tools list      # 8 nocked, broadheads sheathed
+hermes tools list      # light heads enabled, broadheads sheathed
 ```
+
+See `docs/HERMES-INTEGRATION.md` for the integration contract and sync rules.
 
 ## Limitations
 
 MCP tool filtering requires gateway restart. Broadheads add 5-15s subagent dispatch
 latency. Frustration detection is keyword-based, improved nightly. Toolset granularity
 is a Hermes limitation (can't split `file` to keep read_file but drop patch).
+
+**Known (Jul 2026):** OmniRoute provider probe engine can exceed 600s timeout under
+load (job `90ae4bb2ff1f`). Cron delivery to non-local platforms silently fails if
+the platform is not configured (3 affected jobs: schema-pack, weekly-spend,
+weekly-synthesis — all targeting Telegram, which is not configured). Skills directory
+contains legacy gstack nested copies (`.hermes/skills/gstack/.hermes/skills/...`) that
+could be consolidated. Hermes v0.15+ changed cron subcommand from `cronjob` to `cron`.
 
 ## License
 

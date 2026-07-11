@@ -22,7 +22,9 @@ triggers:
   - "can't you just"
   - "why won't"
   - "this is broken"
-  - "fix this"
+  - "quiver"
+  - "reach for skills"
+  - "get tools"
 ---
 
 # Lazy Tools — Self-Learning Tool Router
@@ -78,6 +80,28 @@ Agent: [DETECTS FRUSTRATION]
        → "Found the browser tools. Checking the website now..."
 ```
 
+## Quiver / Trailhead install awareness
+
+Quiver is now a first-class Hermes companion with a local CLI:
+
+```bash
+quiver doctor
+quiver status --json
+quiver install --apply
+quiver repair --apply
+```
+
+Use `quiver doctor` whenever the user asks whether Hermes still knows about lazy tools, GBrain tool catalog, tool budget, or the nightly fletcher. It verifies: active Hermes command, GBrain catalog `systems/tool-catalog`, installed `lazy-tools` skill, nightly `lazy-tools-nightly-learn` cron, tool enable/disable shape, prompt/tool schema budget, and Trailhead reachability.
+
+Trailhead is the hard-source research capability. It now has a PATH wrapper:
+
+```bash
+hermes-trailhead doctor
+hermes-trailhead search all "query" --execute --extract --score --limit 3 --extract-limit 3 --format json
+```
+
+Quiver is above Trailhead: Quiver chooses the head/capability; Trailhead performs research when selected by `search-routing`.
+
 ## Standard Delegation (non-frustration path)
 
 When the user calmly asks for something that needs a disabled tool:
@@ -113,7 +137,7 @@ with the GitHub token from the environment. The subagent should use `terminal` c
 
 ## Nightly Learning
 
-A cron job (`lazy-tools-nightly-learn`, ID `f6b5827c2ae1`) runs daily at 02:00 UTC. It:
+A cron job (`quiver-fletcher-nightly`, ID `03bf4d9f9a73`) runs daily at 02:00 UTC. It:
 1. Reads the day's session transcripts
 2. Identifies patterns: which disabled tools were actually needed, which trigger phrases worked
 3. Patches this skill with new trigger phrases and better toolset mappings
@@ -133,6 +157,19 @@ After any tool delegation:
 - Check that the subagent actually produced results
 - If the subagent failed, try a different approach before reporting failure
 - Subagent summaries are self-reports — verify critical results
+
+## PITFALL — Proactive skill loading (the "reach for skills" rule)
+
+When the user mentions a system, tool, or workflow by name (\"Quiver\", \"Trailhead\", \"LEVIATHAN routing\", \"oracle arm\", \"GBrain MCP\"), you MUST load the relevant skill BEFORE claiming inability or starting work. The user built these tools to make you more capable — ignoring them and working blind is the fastest path to frustration. If a task touches infrastructure, load `oracle-arm-architecture`. If it touches disk layout, search GBrain for existing pages before creating new ones. The user shouldn't have to say \"i thought we had quiver installed\" — that's a failure signal that means you worked without the right skill loaded.
+
+## PITFALL — Quiver/GBrain frustration requires immediate proof, not explanation
+
+If the user challenges whether you have GBrain, search, or Quiver access (for example: \"do you not have gbrain access\", \"i thought quiver helped\", \"aren't you searching\"), treat it as a workflow correction. Do not answer from memory and do not defend the previous step. Immediately verify the available lane:
+
+1. Load this skill plus the relevant search/GBrain skill (`search-routing`, `gbrain-think`, or Hermes troubleshooting skill as applicable).
+2. Query GBrain/tool catalog first. Prefer MCP tools when mounted; if native MCP tools are not exposed in the current session, use the `gbrain` CLI in terminal (`gbrain version`, `gbrain get systems/tool-catalog`, targeted `gbrain query ...`).
+3. Report raw proof of access briefly, then state the process correction: GBrain first, then runtime/filesystem verification.
+4. Continue the task using that order. Do not turn a missing convenience wrapper or PATH issue into \"Quiver is broken\"; Quiver may still be functioning as skills + GBrain catalog + cron-maintained doctrine even without a direct CLI command.
 
 ## PITFALL — MCP tool filtering requires gateway restart
 

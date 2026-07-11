@@ -154,6 +154,35 @@ get_pull_request, search_issues, list_commits, fork_repository)
 **Frustration signals:** "search github for", "find this on github", "check that
 repo", "why can't you search github", "look up the issue"
 
+### hermes_trailhead
+
+**Description:** Hermes-native hard-source research tool. Searches all source terrain
+(web, X/Twitter, Reddit, TikTok, Instagram, YouTube, GitHub, forums/docs), extracts
+summaries/transcripts/metadata, scores source quality, and reports caveats. Use when
+research needs practitioner/social/current/hard-source evidence instead of generic web only.
+
+**Command:** `hermes-trailhead search all "query" --execute --extract --score --format json`
+
+**User says:** "search trailhead", "use Trailhead", "hard-source research", "what are
+people saying", "social/practitioner evidence", "search all lanes", "prove it online"
+
+**Frustration signals:** "why didn't you use trailhead", "this research is weak",
+"you missed Reddit/X/GitHub", "search the whole internet", "none of your solutions work"
+
+### quiver_cli
+
+**Description:** Local Quiver integration manager. Verifies and repairs Hermes lazy-tool
+state: GBrain tool catalog, lazy-tools skill, broadhead disablement, light-head enablement,
+prompt budget, nightly fletcher cron, and Trailhead reachability.
+
+**Command:** `quiver doctor` / `quiver repair --apply`
+
+**User says:** "does Hermes know about Quiver", "is Quiver installed", "why are tools missing",
+"token bloat", "keep the functions but lighten tokens", "tool catalog", "fletcher"
+
+**Frustration signals:** "I thought Quiver helped", "can't you search/use tools", "why don't
+you know about my tools", "did you forget GBrain/Quiver"
+
 ## Routing Logic
 
 ### Standard delegation flow
