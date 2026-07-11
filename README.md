@@ -24,7 +24,7 @@ works nightly while the archer sleeps.
 ```
                       THE QUIVER (always on the hip)
                ┌─────────────────────────────────────────┐
-               │  AGENTS.md (3.1 KB) + SOUL.md (3.5 KB) │
+               │  AGENTS.md (3.6 KB) + SOUL.md (3.5 KB) │
                │  Budget: <16 KB combined                │
                │                                         │
                │  ┌──────────────────────────────────┐   │
@@ -166,21 +166,21 @@ in sessions that don't need them.
 
 ### Performance
 
-| Part | Before (Jun 2026) | After (Jun 2026) | Current (Jul 09 2026) | Change |
+| Part | Before (Jun 2026) | After (Jun 2026) | Current (Jul 2026) | Change |
 |---|---|---|---|---|
 | **Shaft** | | | | |
-| AGENTS.md | 19.0 KB | 3.1 KB | 3.5 KB | **-82%** |
+| AGENTS.md | 19.0 KB | 3.1 KB | 3.6 KB | **-81%** |
 | SOUL.md | 10.1 KB | 3.5 KB | 3.5 KB | **-65%** |
-| Combined | 29.1 KB | 6.6 KB | 7.0 KB | **-76%** |
+| Combined | 29.1 KB | 6.6 KB | 7.1 KB | **-76%** |
 | **Heads** | | | | |
 | Hermes tools loaded | 33 | 15 | 15 | **-55%** |
 | Tool schemas | 61.6 KB | 36.9 KB | 36.9 KB | **-40%** |
 | GBrain MCP tools | 85 | 25 | 25 | **-71%** |
 | GitHub MCP tools | 30+ | 13 | 13 | **-57%** |
 | **Impact** | | | | |
-| System prompt | 33.3 KB | 21.6 KB | 21.4 KB | **-36%** |
-| Per-turn tokens saved | — | ~12,000 | ~12,000 | — |
-| Monthly savings | — | ~120M tokens / ~$65 | ~130M tokens / ~$70 | — |
+| System prompt | 33.3 KB | 21.6 KB | 24.3 KB | **-27%** |
+| Per-turn tokens saved | — | ~12,000 | ~11,000 | — |
+| Monthly savings | — | ~120M tokens / ~$65 | ~115M tokens / ~$63 | — |
 | "I can't do that" rate | frequent | near-zero | near-zero | — |
 
 ---
@@ -263,7 +263,7 @@ hermes cron create --name lazy-tools-nightly-learn --schedule "0 2 * * *" \
   --prompt "$(cat crons/nightly-learn-prompt.md)"
 
 # 7. Verify
-hermes prompt-size     # shaft + light heads = ~37 KB schemas, ~22 KB prompt
+hermes prompt-size     # shaft + light heads = ~37 KB schemas, ~24 KB prompt
 hermes tools list      # light heads enabled, broadheads sheathed
 ```
 
@@ -278,9 +278,13 @@ is a Hermes limitation (can't split `file` to keep read_file but drop patch).
 **Known (Jul 2026):** OmniRoute provider probe engine can exceed 600s timeout under
 load (job `90ae4bb2ff1f`). Cron delivery to non-local platforms silently fails if
 the platform is not configured (3 affected jobs: schema-pack, weekly-spend,
-weekly-synthesis — all targeting Telegram, which is not configured). Skills directory
-contains legacy gstack nested copies (`.hermes/skills/gstack/.hermes/skills/...`) that
-could be consolidated. Hermes v0.15+ changed cron subcommand from `cronjob` to `cron`.
+weekly-synthesis — all targeting Telegram, which is not configured). `gbrain-model-watchdog-native`
+currently fails with `No brain configured. Run: gbrain init`, `gbrain-timeline-watchdog`
+currently fails parsing the timeline count from `gbrain stats`, and
+`gbrain-timeline-pipeline` currently fails because the expected repo path
+`/srv/minio/hermes/home/.obsidian/rd3/hermes-moncho` is missing. Skills directory
+contains legacy gstack nested copies (`.hermes/skills/gstack/.hermes/skills/...`)
+that could be consolidated. Hermes v0.15+ changed cron subcommand from `cronjob` to `cron`.
 
 ## License
 
